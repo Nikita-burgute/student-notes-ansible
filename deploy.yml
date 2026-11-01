@@ -1,0 +1,29 @@
+---
+- name: Deploy Student Notes Website
+  hosts: webservers
+  become: yes
+
+  tasks:
+
+    - name: Install Nginx web server
+      apt:
+        name: nginx
+        state: present
+        update_cache: yes
+
+    - name: Copy website files to Nginx directory
+      copy:
+        src: website/
+        dest: /var/www/html/
+        mode: "0644"
+
+    - name: Check Nginx configuration
+      command: nginx -t
+      changed_when: false
+
+    - name: Start Nginx web server
+      shell: |
+        if ! pgrep -x nginx > /dev/null; then
+          nginx
+        fi
+      changed_when: false
