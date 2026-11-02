@@ -1,0 +1,67 @@
+pipeline {
+    agent any
+
+    environment {
+        IMAGE_NAME = 'student-notes-app'
+        CONTAINER_NAME = 'student-notes-ci-cd'
+        PORT = '8080'
+    }
+
+    stages {
+
+        stage('Checkout') {
+            steps {
+                git branch: 'main',
+                    url: 'https://github.com/Nikita-burgute/student-notes-ansible.git'
+            }
+        }
+
+        stage('Build') {
+            steps {
+                sh 'docker build -t ${IMAGE_NAME}:latest .'
+            }
+        }
+
+        stage('Test') {
+            steps {
+                sh '''
+                    test -f website/index.html
+                    test -f website/style.css
+                    echo "Website source files verified successfully"
+                '''
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                sh '''
+                    docker rm -f ${CONTAINER_NAME} || true
+                    docker run -d \
+                    --name ${CONTAINER_NAME} \
+                    -p ${PORT}:80 \
+                    ${IMAGE_NAME}:latest
+                '''
+            }
+        }
+
+        stage('Verify') {
+            steps {
+                sh '''
+                    sleep 3
+                    docker ps
+                    curl -f http://localhost:${PORT}
+                '''
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'CI/CD Pipeline completed successfully!'
+        }
+
+        failure {
+            echo 'CI/CD Pipeline failed. Check the console output.'
+        }
+    }
+}
