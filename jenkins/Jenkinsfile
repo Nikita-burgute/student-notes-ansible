@@ -1,3 +1,4 @@
+
 pipeline {
     agent any
 
@@ -49,7 +50,9 @@ pipeline {
                 sh '''
                     sleep 3
                     docker ps
-                    curl -f http://localhost:${PORT}
+                    docker exec ${CONTAINER_NAME} \
+                    wget -qO- http://127.0.0.1 > /dev/null
+                    echo "Application is running successfully!"
                 '''
             }
         }
